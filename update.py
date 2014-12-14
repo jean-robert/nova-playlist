@@ -5,6 +5,7 @@ import datetime, time
 import urllib2
 import re
 import os, subprocess
+import logger
 
 import settings
 
@@ -82,13 +83,14 @@ def makePlaylistFile():
         f.write(af + '\n')
     f.close()
 
-def syncDropBox(folder):
+def syncDropBox():
     subprocess.call("bash dropbox_uploader.sh upload musiques .")
 
 
 if __name__ == "__main__":
 
-    print "Update de nova-playlist"
+    log = Logger()
+    log.INFO("Update de nova-playlist")
 
     sdate = datetime.datetime.now() - settings.LOOKBACK
     print "Scrap depuis " + str(sdate)
