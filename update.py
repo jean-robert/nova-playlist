@@ -5,7 +5,7 @@ import datetime, time
 import urllib2
 import re
 import os, subprocess
-import logger
+import logging
 
 import settings
 
@@ -17,6 +17,7 @@ def scrapNova(sdate):
 
     fullPlaylist = dict()
     while curr_datetime < now + step:
+        logger.info('Scrap actuellement @ ' + str(curr_datetime))
         url = mainUrl + str(int(time.mktime(curr_datetime.timetuple())))
 
         try:
@@ -47,8 +48,10 @@ def buildPlaylist(playlist, N):
             counts[song] += 1
         else:
             counts[song] = 1
-
-    return sorted(counts, key=counts.get, reverse=True)[:N]
+    final = sorted(counts, key=counts.get, reverse=True)[:N]
+    for i in range(N):
+        logger.info('#' + str(i + 1) + ': ' + final[i])
+    return final
 
 
 def scrapYouTube(song):
@@ -60,7 +63,7 @@ def scrapYouTube(song):
     content = ''.join(page.readlines("utf8"))
 
     if len(re.findall('Aucune vid',content))>0:
-        print("Aucune video trouvee")
+        logger.warn(song + " : Aucune video trouvee")
         return ''
     else:
         videos = re.findall('href="\/watch\?v=(.*?)[&;"]',content)
@@ -73,7 +76,9 @@ def downloadMP3(ytList):
     for yt in ytList:
         f.write('https://www.youtube.com/watch?v=' + yt + '\n')
     f.close()
-    os.system("/usr/bin/youtube-dl -a todo -x")
+    logger.info('Debut des telechargements...')
+    os.system("/usr/bin/youtube-dl -q -a todo -x")
+    logger.info('Telechargements finis')
     os.remove('todo')
 
 def makePlaylistFile():
@@ -84,34 +89,42 @@ def makePlaylistFile():
     f.close()
 
 def syncDropBox():
+    logger.info('Debut de la synchronisation DropxBox...')
     subprocess.call("bash dropbox_uploader.sh upload musiques .")
-
+    logger.info('Synchronisation DropxBox finie...')
 
 if __name__ == "__main__":
 
-    log = Logger()
-    log.INFO("Update de nova-playlist")
+    logger = logging.getLogger('[nova-playlist]')
+    logger.setLevel(logging.DEBUG)
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    logger.info("Update de nova-playlist")
 
     sdate = datetime.datetime.now() - settings.LOOKBACK
-    print "Scrap depuis " + str(sdate)
+    logger.info("Scrap depuis " + str(sdate))
     fullNovaPlaylist = scrapNova(sdate)
 
-    print "Construit la playlist de " + str(settings.NB_TITLES) + " titres"
+    logger.info("Construit la playlist de " + str(settings.NB_TITLES) + " titres")
     targetPlaylist = buildPlaylist(fullNovaPlaylist, settings.NB_TITLES)
 
-    print "Récupère les liens YouTube"
+    logger.info("Récupère les liens YouTube")
     targetYT = [scrapYouTube(song) for song in targetPlaylist]
 
-    print "Clean les anciens et télécharge les nouveaux .mp3"
+    logger.info("Clean les anciens et télécharge les nouveaux .mp3")
     os.chdir('musiques')
     rm = [os.remove(f) for f in os.listdir(os.getcwd())]
     downloadMP3(targetYT)
 
-    print "Construit le fichier de playlist"
+    logger.info("Construit le fichier de playlist")
     makePlaylistFile()
 
-    print "Synchronise avec DropBox"
     os.chdir('..')
     syncDropBox()
 
-    print "Terminé !"
+    logger.info("Update terminé !")
