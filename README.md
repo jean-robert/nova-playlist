@@ -6,6 +6,7 @@ Avoir une playlist à jour dans un dossier DropBox avec les titres les plus jou�
 ### Requirements
 - Python 2.7
 - `youtube-dl`
+- `beautifulsoup4`
 - `dropbox_uploader.sh` (suivre la procédure d'installation d'une app DropBox)
 
 ### Settings
