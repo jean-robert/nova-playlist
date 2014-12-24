@@ -160,6 +160,7 @@ def syncDropBox(songs, working_directory):
     current_directory = os.path.dirname(os.path.abspath(__file__))
     os_query("%(current_directory)s/dropbox_uploader.sh delete music" % locals())
     os_query("%(current_directory)s/dropbox_uploader.sh mkdir music" % locals())
+    os_query("%(current_directory)s/dropbox_uploader.sh upload %(working_directory)s/nova-playlist.m3u music" % locals())
     for song in songs:
         fn = song.filename(working_directory)
         if os.path.exists(fn):
