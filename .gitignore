@@ -5,3 +5,6 @@
 .DS_Store
 *.egg-info/
 .sqlite
+*.sqlite
+dist/
+nova-playlist/music/
