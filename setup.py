@@ -2,11 +2,11 @@ from distutils.core import setup
 from setuptools import find_packages
 
 setup(name='nova-playlist',
-      version='0.1.0',
+      version='0.2.0',
       author='Guillaume Thomas',
       author_email='guillaume.thomas642@gmail.com',
       license='LICENCE.txt',
-      description='Rasp http server',
+      description='Nova playlist',
       url='https://github.com/jean-robert/nova-playlist',
       install_requires=map(lambda line: line.strip("\n"),
                            open("requirements.txt", "r").readlines()),
