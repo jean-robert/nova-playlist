@@ -1,0 +1,3 @@
+beautifulsoup4 == 4.3.2
+eyed3 == 0.7.5
+youtube-dl == 2014.12.16.2
