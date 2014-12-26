@@ -1,64 +1,43 @@
 # -*- coding: utf-8 -*-
 
+import logging
+logging.basicConfig(format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+logger = logging.getLogger('nova-playlist')
+logger.setLevel(logging.DEBUG)
+
 from bs4 import BeautifulSoup
 import datetime, time
 import urllib, urllib2
 import re
 import os, subprocess
-import logging
 import pickle
+
+import sys
+import requests
+import requests_cache
+import eyed3
 from optparse import OptionParser
 from collections import Counter
 
-logger = logging.getLogger('[nova-playlist]')
-logger.setLevel(logging.DEBUG)
-
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
 logger.info("Update de nova-playlist")
 
 parser = OptionParser()
 parser.add_option("", "--log-level", dest="log_level", default = "info", help="verbosity : debug, info, warning, error, critical")
 parser.add_option("", "--log-filter", dest="log_filter", default = "", help="")
-parser.add_option("", "--lookback", dest = "lookback", default = 7 * 24 * 3600, type = "int", help = "Période en secondes")
-parser.add_option("", "--titles", dest = "titles", default = 20, type = "int", help = "nombre de titres à sélectionner pour la playslist")
+parser.add_option("", "--lookback", dest = "lookback", default = 7 * 24 * 3600, type = "int", help = u"Période en secondes")
+parser.add_option("", "--titles", dest = "titles", default = 20, type = "int", help = u"nombre de titres à sélectionner pour la playslist")
 parser.add_option("", "--workspace", dest="workspace", default = "")
 parser.add_option("", "--youtube-dl-bin", dest="youtube_dl_bin", default = "youtube-dl")
+parser.add_option("", "--no-upload", dest = "no_upload", default = False, action = "store_true")
 
 options, args = parser.parse_args()
 default_level = getattr(logging, options.log_level.upper())
-for logger in logging.Logger.manager.loggerDict.values():
-    if isinstance(logger, logging.Logger):
-        logger.setLevel(default_level)
+for l in logging.Logger.manager.loggerDict.values():
+    if isinstance(l, logging.Logger):
+        l.setLevel(default_level)
 if options.log_filter:
     for logger_name, level in [token.split(":") for token in options.log_filter.split(",")]:
         logging.getLogger(logger_name).setLevel(getattr(logging, level.upper()))
-
-def cached_task(workspace):
-    def task(func):
-        def wrapper(*args, **kwargs):
-            fn = "%s_%s.pickle" % (workspace, func.__name__)
-            if workspace and os.path.exists(fn):
-                try:
-                    retval = pickle.load(open(fn, "r"))
-                    logger.debug("Loaded result from %(fn)s" % locals())
-                    return retval
-                except Exception as e:
-                    logger.warning("impossible to load from %(fn)s, %(e)s" % locals())
-            retval = func(*args, **kwargs)
-            if workspace:
-                try:
-                    pickle.dump(retval, open(fn, "w+"))
-                    logger.debug("Dumped result to %(fn)s" % locals())
-                except Exception as e:
-                    logger.error("impossible to dump to %(fn)s, %(e)s" % locals())
-            return retval
-        return wrapper
-    return task
 
 class Song(object):
     def __init__(self, artist, title):
@@ -78,7 +57,19 @@ class Song(object):
         return "%s/%s - %s.avi" % (working_directory, self.artist.replace("/", " "), self.title.replace("/", " "))
 
     def filename(self, working_directory):
-        return "%s/%s - %s.m4a" % (working_directory, self.artist.replace("/", " "), self.title.replace("/", " "))        
+        return "%s/%s - %s.mp3" % (working_directory, self.artist.replace("/", " "), self.title.replace("/", " "))        
+
+    def tag(self, working_directory, track_num):
+        mp3 = eyed3.load(self.filename(working_directory))
+        if mp3 is None:
+            raise IOError("Cannot load id3 tags of %(self)s" % locals())
+        mp3.initTag()
+        mp3.tag.artist = self.artist
+        mp3.tag.title = self.title
+        mp3.tag.album = u"Nova Playlist %s" % datetime.date.today()
+        mp3.tag.track_num = track_num
+        mp3.tag.save()
+
 
     def download(self, youtube_dl_bin, working_directory):
         if not self.youtube_id:
@@ -88,12 +79,11 @@ class Song(object):
             tmp_fn = self.tmp_filename(working_directory)
             fn = self.filename(working_directory)
             if not os.path.exists(fn):
-                os_query("""%(youtube_dl_bin)s --quiet --extract-audio "%(url)s" -o "%(tmp_fn)s" """ % locals())
+                os_query("""%(youtube_dl_bin)s --quiet --extract-audio --audio-format mp3 "%(url)s" -o "%(tmp_fn)s" """ % locals())
                 logger.info("Downloaded %(self)s" % locals())
             else:
                 logger.info("Skipped %(self)s, already downloaded" % locals())
 
-@cached_task(options.workspace)
 def scrapNova(ts):
     mainUrl = "http://www.novaplanet.com/radionova/cetaitquoicetitre/"
     step = datetime.timedelta(seconds = 3600)
@@ -105,13 +95,11 @@ def scrapNova(ts):
         logger.info('Scrap actuellement @ %(ts)s, %(url)s' % locals())
 
         try:
-            page = urllib2.urlopen(url,timeout=15)
+            page = requests.get(url, timeout = 15)
         except Exception as e:
             logger.error("Cannot get %(url)s, %(e)s" % locals())
 
-        content = ''.join(page.readlines("utf8"))
-
-        parsed_content = BeautifulSoup(content)
+        parsed_content = BeautifulSoup(page.content)
         for t in parsed_content.find_all('div', class_="resultat"):
             try:
                 fullPlaylist[(t['class'][0]).split('_')[1]] = Song(artist = (t.h2.string if t.h2.string else t.h2.a.string).strip(), \
@@ -123,34 +111,32 @@ def scrapNova(ts):
 
     return fullPlaylist
 
-@cached_task(options.workspace)
 def buildPlaylist(songs, title_nb):
     playlist = Counter(songs.values()).most_common(title_nb)
     for i, (song, broadcast_nb) in enumerate(playlist):
         logger.info("#%(i).3d %(song)s %(broadcast_nb)s broadcasts" % locals())
     return [i[0] for i in playlist]
 
-@cached_task(options.workspace)
 def scrapYouTube(songs):
     retval = []
     for song in songs:
         url = "http://www.youtube.com/results?search_query=%s" % urllib.quote_plus(str(song))
-        page = urllib2.urlopen(url, timeout = 15)
-        content = ''.join(page.readlines("utf8"))
+        page = requests.get(url, timeout = 15)
 
-        if 'Aucune vid' in content:
+        if 'Aucune vid' in page.content:
             logger.warning("No video found for %(song)s" % locals())
             song.youtube_id = None
         else:
-            youtube_id = re.findall('href="\/watch\?v=(.*?)[&;"]',content)[0]
+            youtube_id = re.findall('href="\/watch\?v=(.*?)[&;"]',page.content)[0]
             logger.info("Found %(youtube_id)s for song %(song)s" % locals())
             song.youtube_id = youtube_id
     return songs
 
 def downloadMP3(youtube_dl_bin, working_directory, songs):
     create_directory(working_directory)
-    for song in songs:
+    for s, song in enumerate(songs):
         song.download(youtube_dl_bin, working_directory)
+        song.tag(working_directory, s+1)
             
 def makePlaylistFile(songs, working_directory):
     with open("%(working_directory)s/nova-playlist.m3u" % locals(), 'w+') as f:
@@ -185,7 +171,11 @@ def create_directory(directory):
 
 if __name__ == "__main__":
     ts = datetime.datetime.now() - datetime.timedelta(seconds = options.lookback)
+    ts = datetime.datetime(ts.year, ts.month, ts.day, ts.hour)
+
     working_directory = os.path.join(os.getcwd(), "music")
+    if options.workspace:
+        requests_cache.install_cache(options.workspace)
 
     logger.info("Scrap depuis %(ts)s" % locals())
     songs = scrapNova(ts)
@@ -202,6 +192,7 @@ if __name__ == "__main__":
     logger.info("Construit le fichier de playlist")
     makePlaylistFile(songs, working_directory)
 
-    syncDropBox(songs, working_directory)
+    if not options.no_upload:
+        syncDropBox(songs, working_directory)
 
     logger.info("Update terminé !")
