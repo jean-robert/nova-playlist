@@ -12,6 +12,12 @@ Avoir une playlist à jour dans un dossier DropBox avec les titres les plus jou�
 - `requests`
 - `requests_cache`
 
+### Exemples d'utilisation
+Sans caching en regardant les 3 derniers jours:
+    python update.py --lookback 259200 --titles 20
+Avec caching en regardant les 7 derniers jours:
+    python update.py --lookback 604800 --titles 20 --workspace /tmp/toto
+
 ### `update.py`
 - récupère la playlist de diffusion (scrap de Nova depuis un timestamp donné)
 - crée la nouvelle playlist (simple compte des occurrences)
