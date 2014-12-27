@@ -23,7 +23,7 @@ logger.info("Update de nova-playlist")
 parser = OptionParser()
 parser.add_option("", "--log-level", dest="log_level", default="info", help="verbosity : debug, info, warning, error, critical")
 parser.add_option("", "--log-filter", dest="log_filter", default="", help="")
-parser.add_option("", "--lookback", dest="lookback", default=7 * 24 * 3600, type="int", help=u"Période en secondes")
+parser.add_option("", "--lookback", dest="lookback", default = "7d", help=u"Période en secondes")
 parser.add_option("", "--titles", dest="titles", default=20, type="int", help=u"nombre de titres à sélectionner pour la playslist")
 parser.add_option("", "--workspace", dest="workspace", default="")
 parser.add_option("", "--youtube-dl-bin", dest="youtube_dl_bin", default="youtube-dl")
@@ -139,7 +139,7 @@ def downloadMP3(youtube_dl_bin, working_directory, songs):
     create_directory(working_directory)
     for s, song in enumerate(songs):
         song.download(youtube_dl_bin, working_directory)
-        song.tag(working_directory, s+1)
+        song.tag(working_directory, s + 1)
 
 
 def makePlaylistFile(songs, working_directory):
@@ -177,8 +177,26 @@ def remove_and_create_directory(directory):
 def create_directory(directory):
     os_query("mkdir -p %(directory)s" % locals())
 
+
+duration_suffixes = dict((("s", 1), ("m", 60), ("h", 60 * 60), ("d", 24 * 60 * 60),
+                         ("w", 7 * 24 * 60 * 60), ("y", 365 * 7 * 24 * 60 * 60)))
+
+
+def parse_duration(duration):
+    """
+        Parse human duration into duration in seconds
+    """
+    if not isinstance(duration, str) and not isinstance(duration, unicode):
+        raise TypeError("Cannot parse duration. Must be string or unicode")
+    if duration.isdigit():
+        return int(duration)
+    suffix = duration[-1]
+    prefix = duration[:-1]
+    return int(prefix) * duration_suffixes[suffix]
+
 if __name__ == "__main__":
-    ts = datetime.datetime.now() - datetime.timedelta(seconds=options.lookback)
+    lookback = parse_duration(options.lookback)
+    ts = datetime.datetime.now() - datetime.timedelta(seconds=lookback)
     ts = datetime.datetime(ts.year, ts.month, ts.day, ts.hour)
 
     working_directory = os.path.join(os.getcwd(), "music")
