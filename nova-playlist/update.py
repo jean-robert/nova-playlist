@@ -6,8 +6,10 @@ logger = logging.getLogger('nova-playlist')
 logger.setLevel(logging.DEBUG)
 
 import datetime
-import eyed3
+from mutagen.id3 import ID3, TIT2, TPE1, TALB
+from mutagenerate.core import AmazonSource
 import os
+import random
 import re
 import requests
 import requests_cache
@@ -23,7 +25,8 @@ logger.info("Update de nova-playlist")
 parser = OptionParser()
 parser.add_option("", "--log-level", dest="log_level", default="info", help="verbosity : debug, info, warning, error, critical")
 parser.add_option("", "--log-filter", dest="log_filter", default="", help="")
-parser.add_option("", "--lookback", dest="lookback", default = "7d", help=u"Période en secondes")
+parser.add_option("", "--lookback", dest="lookback", default="7d", help=u"Période en secondes")
+parser.add_option("", "--strategy", dest="strategy", default="mostcommon", help=u"Stratégie parmi (mostcommon, random)")
 parser.add_option("", "--titles", dest="titles", default=20, type="int", help=u"nombre de titres à sélectionner pour la playslist")
 parser.add_option("", "--workspace", dest="workspace", default="")
 parser.add_option("", "--youtube-dl-bin", dest="youtube_dl_bin", default="youtube-dl")
@@ -37,6 +40,9 @@ for l in logging.Logger.manager.loggerDict.values():
 if options.log_filter:
     for logger_name, level in [token.split(":") for token in options.log_filter.split(",")]:
         logging.getLogger(logger_name).setLevel(getattr(logging, level.upper()))
+
+
+source = AmazonSource()
 
 
 class Song(object):
@@ -60,15 +66,14 @@ class Song(object):
         return "%s/%s - %s.mp3" % (working_directory, self.artist.replace("/", " "), self.title.replace("/", " "))
 
     def tag(self, working_directory, track_num):
-        mp3 = eyed3.load(self.filename(working_directory))
+        mp3 = ID3(self.filename(working_directory))
         if mp3 is None:
             raise IOError("Cannot load id3 tags of %(self)s" % locals())
-        mp3.initTag()
-        mp3.tag.artist = self.artist
-        mp3.tag.title = self.title
-        mp3.tag.album = u"Nova Playlist %s" % datetime.date.today()
-        mp3.tag.track_num = track_num
-        mp3.tag.save()
+        mp3.add(TIT2(encoding=3, text=self.title))
+        mp3.add(TPE1(encoding=3, text=self.artist))
+        mp3.add(TALB(encoding=3, text=u"Nova Playlist"))
+        mp3.save()
+        source.generate_and_save(mp3, update=False, yes=True)
 
     def download(self, youtube_dl_bin, working_directory):
         if not self.youtube_id:
@@ -100,7 +105,7 @@ def scrapNova(ts):
             logger.error("Cannot get %(url)s, %(e)s" % locals())
 
         parsed_content = BeautifulSoup(page.content)
-        for t in parsed_content.find_all('div', class_="resultat"):
+        for t in parsed_content.select('div.resultat'):
             try:
                 fullPlaylist[(t['class'][0]).split('_')[1]] = Song(artist=(t.h2.string if t.h2.string else t.h2.a.string).strip(),
                                                                    title=(t.h3.string if t.h3.string else t.h3.a.string).strip())
@@ -108,12 +113,14 @@ def scrapNova(ts):
                 logger.error("Cannot parse %(t)s, %(e)s" % locals())
 
         ts += step
+    return fullPlaylist.values()
 
-    return fullPlaylist
 
-
-def buildPlaylist(songs, title_nb):
-    playlist = Counter(songs.values()).most_common(title_nb)
+def buildPlaylist(songs, title_nb, strategy):
+    playlist = Counter(songs).most_common()
+    if strategy == "random":
+        random.shuffle(playlist)
+    playlist = playlist[:title_nb]
     for i, (song, broadcast_nb) in enumerate(playlist):
         logger.info("#%(i).3d %(song)s %(broadcast_nb)s broadcasts" % locals())
     return [i[0] for i in playlist]
@@ -207,7 +214,7 @@ if __name__ == "__main__":
     songs = scrapNova(ts)
 
     logger.info("Construit la playlist de " + str(options.titles) + " titres")
-    songs = buildPlaylist(songs, options.titles)
+    songs = buildPlaylist(songs, options.titles, options.strategy)
 
     logger.info("Récupère les liens YouTube")
     songs = scrapYouTube(songs)

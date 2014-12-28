@@ -1,4 +1,5 @@
 beautifulsoup4 == 4.3.2
-eyed3 == 0.7.5
+mutagen
 youtube-dl == 2014.12.16.2
 requests_cache == 0.4.8
+mutagenerate >= 0.1.0
