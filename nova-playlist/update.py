@@ -71,7 +71,7 @@ class Song(object):
             raise IOError("Cannot load id3 tags of %(self)s" % locals())
         mp3.add(TIT2(encoding=3, text=self.title))
         mp3.add(TPE1(encoding=3, text=self.artist))
-        mp3.add(TALB(encoding=3, text=u"Nova Playlist"))
+        # mp3.add(TALB(encoding=3, text=u"Nova Playlist"))
         mp3.save()
         source.generate_and_save(mp3, update=False, yes=True)
 
