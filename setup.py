@@ -2,7 +2,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 setup(name='nova-playlist',
-      version='0.2.0',
+      version='0.4.0',
       author='Guillaume Thomas',
       author_email='guillaume.thomas642@gmail.com',
       license='LICENCE.txt',

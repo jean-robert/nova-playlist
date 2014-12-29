@@ -50,8 +50,11 @@ class Song(object):
         self.artist = artist
         self.title = title
 
+    def __unicode__(self):
+        return u"%(artist)s - %(title)s" % self.__dict__
+
     def __repr__(self):
-        return "%(artist)s - %(title)s" % self.__dict__
+        return self.__unicode__().encode("utf8")
 
     def __eq__(self, other):
         return self.artist == other.artist and self.title == other.title
@@ -60,10 +63,10 @@ class Song(object):
         return hash((self.artist, self.title))
 
     def tmp_filename(self, working_directory):
-        return "%s/%s - %s.avi" % (working_directory, self.artist.replace("/", " "), self.title.replace("/", " "))
+        return u"%s/%s - %s.avi" % (working_directory, self.artist.replace("/", " "), self.title.replace("/", " "))
 
     def filename(self, working_directory):
-        return "%s/%s - %s.mp3" % (working_directory, self.artist.replace("/", " "), self.title.replace("/", " "))
+        return u"%s/%s - %s.mp3" % (working_directory, self.artist.replace("/", " "), self.title.replace("/", " "))
 
     def tag(self, working_directory, track_num):
         mp3 = ID3(self.filename(working_directory))
@@ -71,7 +74,7 @@ class Song(object):
             raise IOError("Cannot load id3 tags of %(self)s" % locals())
         mp3.add(TIT2(encoding=3, text=self.title))
         mp3.add(TPE1(encoding=3, text=self.artist))
-        # mp3.add(TALB(encoding=3, text=u"Nova Playlist"))
+        mp3.add(TALB(encoding=3, text=u"Nova Playlist"))
         mp3.save()
         source.generate_and_save(mp3, update=False, yes=True)
 
@@ -80,8 +83,8 @@ class Song(object):
             logger.warning("Song %(self)s has no youtube id" % locals())
         else:
             url = "https://www.youtube.com/watch?v=%s" % self.youtube_id
-            tmp_fn = self.tmp_filename(working_directory)
-            fn = self.filename(working_directory)
+            tmp_fn = self.tmp_filename(working_directory).encode("utf8")
+            fn = self.filename(working_directory).encode("utf8")
             if not os.path.exists(fn):
                 os_query("""%(youtube_dl_bin)s --quiet --extract-audio --audio-format mp3 "%(url)s" -o "%(tmp_fn)s" """ % locals())
                 logger.info("Downloaded %(self)s" % locals())
@@ -151,7 +154,7 @@ def downloadMP3(youtube_dl_bin, working_directory, songs):
 
 def makePlaylistFile(songs, working_directory):
     with open("%(working_directory)s/nova-playlist.m3u" % locals(), 'w+') as f:
-        f.write("\n".join([song.filename(".") for song in songs]))
+        f.write("\n".join([song.filename(".").encode("utf8") for song in songs]))
 
 
 def syncDropBox(songs, working_directory):
