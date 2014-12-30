@@ -1,1 +1,10 @@
 *.pyc
+*.pickle
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+*.egg-info/
+.sqlite
+*.sqlite
+dist/
+nova-playlist/music/
