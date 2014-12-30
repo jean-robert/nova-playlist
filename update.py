@@ -90,6 +90,7 @@ def makePlaylistFile():
 
 def syncDropBox():
     logger.info('Debut de la synchronisation DropxBox...')
+    subprocess.call("bash dropbox_uploader.sh delete musiques")
     subprocess.call("bash dropbox_uploader.sh upload musiques .")
     logger.info('Synchronisation DropxBox finie...')
 
