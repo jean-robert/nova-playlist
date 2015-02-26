@@ -14,12 +14,9 @@ Avoir une playlist à jour dans un dossier DropBox avec les titres les plus jou�
 - `requests_cache`
 
 ### Exemples d'utilisation
-Sans caching en regardant les 3 dernières heures:
-- `python update.py --lookback 3h --titles 5`
-Avec caching en regardant les 7 derniers jours:
-- `python update.py --lookback 7d --titles 20 --workspace /tmp/toto`
-Output vers une playlist YouTube configurée
-- `python update.py --output channel`
+- Sans caching en regardant les 3 dernières heures: `python update.py --lookback 3h --titles 5`
+- Avec caching en regardant les 7 derniers jours: `python update.py --lookback 7d --titles 20 --workspace /tmp/toto`
+- Output vers une playlist YouTube configurée : `python update.py --output channel`
 
 ### `update.py`
 - récupère la playlist de diffusion (scrap de Nova depuis un timestamp donné)
@@ -53,4 +50,4 @@ client_secret=<clientSecret>&
 redirect_uri=urn:ietf:wg:oauth:2.0:oob&
 grant_type=authorization_code
 ```
-fournit l'`acessToken` avec le `refreshToken` que l'on conserve soigneusement. Lors de chaque update, on utilisera le refresh pour récupérer un nouvel acces token.
+fournit l'`accessToken` avec le `refreshToken` que l'on conserve soigneusement. Lors de chaque update, on utilisera le refresh pour récupérer un nouvel access token.
