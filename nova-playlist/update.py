@@ -6,6 +6,7 @@ logger = logging.getLogger('nova-playlist')
 logger.setLevel(logging.DEBUG)
 
 import datetime
+import json
 from mutagen.id3 import ID3, TIT2, TPE1, TALB
 from mutagenerate.core import AmazonSource
 import os
@@ -20,6 +21,8 @@ from bs4 import BeautifulSoup
 from optparse import OptionParser
 from collections import Counter
 
+import youtubeCredentials
+
 logger.info("Update de nova-playlist")
 
 parser = OptionParser()
@@ -27,7 +30,8 @@ parser.add_option("", "--log-level", dest="log_level", default="info", help="ver
 parser.add_option("", "--log-filter", dest="log_filter", default="", help="")
 parser.add_option("", "--lookback", dest="lookback", default="7d", help=u"Période en secondes")
 parser.add_option("", "--strategy", dest="strategy", default="mostcommon", help=u"Stratégie parmi (mostcommon, random)")
-parser.add_option("", "--titles", dest="titles", default=20, type="int", help=u"nombre de titres à sélectionner pour la playslist")
+parser.add_option("", "--titles", dest="titles", default=20, type="int", help=u"Nombre de titres à sélectionner pour la playslist")
+parser.add_option("", "--output", dest="output", default="mp3", help=u"Type d'output (mp3, channel)")
 parser.add_option("", "--workspace", dest="workspace", default="")
 parser.add_option("", "--youtube-dl-bin", dest="youtube_dl_bin", default="youtube-dl")
 parser.add_option("", "--no-upload", dest="no_upload", default=False, action="store_true")
@@ -168,6 +172,51 @@ def syncDropBox(songs, working_directory):
             os_query("""%(current_directory)s/dropbox_uploader.sh upload "%(fn)s" music""" % locals())
 
 
+def getAccessToken():
+    payload = {'client_id': youtubeCredentials.clientID,
+               'client_secret': youtubeCredentials.clientSecret,
+               'refresh_token': youtubeCredentials.refreshToken,
+               'grant_type': 'refresh_token'}
+    r = requests.post('https://accounts.google.com/o/oauth2/token', data=payload)
+    return r.json()['access_token']
+
+
+def cleanChannelPlaylist(token):
+    headers = {'Authorization':  'Bearer ' + token}
+    url = 'https://www.googleapis.com/youtube/v3/playlistItems'
+    r = requests.get(url, params={'part': 'snippet',
+                                  'playlistId': youtubeCredentials.playlistId,
+                                  'maxResults': 50}, headers=headers)
+    for video in r.json()['items']:
+        vd = requests.delete(url, params={'id': video['id']}, headers=headers)
+        if vd.status_code != 204:
+            logger.error("Error removing song from playlist %s" % (vd.text))
+
+
+def buildChannelPlaylist(token, songs):
+    url = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet'
+    headers = {'Authorization':  'Bearer ' + token,
+               'Content-Type': 'application/json'}
+    songPosition = -1
+    for song in songs:
+        if song.youtube_id:
+            songPosition += 1
+            payload = json.dumps({'snippet':
+                                  {
+                                      'playlistId': youtubeCredentials.playlistId,
+                                      'resourceId': {
+                                          'kind': 'youtube#video',
+                                          'videoId': song.youtube_id
+                                      },
+                                      'position': songPosition
+                                  }
+                              })
+            logger.debug('Sending payload %s' % (payload))
+            r = requests.post(url, data=payload, headers=headers)
+            if r.status_code != 200:
+                logger.error("Error publishing %s : %s" % (song.artist + ' / ' + song.title, r.text))
+
+
 def os_query(qry):
     start = time.time()
     retval = os.system(qry)
@@ -222,13 +271,24 @@ if __name__ == "__main__":
     logger.info("Récupère les liens YouTube")
     songs = scrapYouTube(songs)
 
-    logger.info("Clean les anciens et télécharge les nouveaux .mp3")
-    downloadMP3(options.youtube_dl_bin, working_directory, songs)
+    if options.output == 'mp3':
+        logger.info("Clean les anciens et télécharge les nouveaux .mp3")
+        downloadMP3(options.youtube_dl_bin, working_directory, songs)
 
-    logger.info("Construit le fichier de playlist")
-    makePlaylistFile(songs, working_directory)
+        logger.info("Construit le fichier de playlist")
+        makePlaylistFile(songs, working_directory)
 
-    if not options.no_upload:
-        syncDropBox(songs, working_directory)
+        if not options.no_upload:
+            syncDropBox(songs, working_directory)
+
+    if options.output == 'channel':
+        logger.info("Authentification sur YouTube")
+        accessToken = getAccessToken()
+
+        logger.info("Clean la playlist actuelle")
+        cleanChannelPlaylist(accessToken)
+
+        logger.info("Construit la nouvelle playlist sur le channel")
+        buildChannelPlaylist(accessToken, songs)
 
     logger.info("Update terminé !")
