@@ -1,7 +1,8 @@
 from distutils.core import setup
 from setuptools import find_packages
 
-setup(name='nova-playlist',
+setup(
+      name='nova-playlist',
       version='0.4.0',
       author='Guillaume Thomas',
       author_email='guillaume.thomas642@gmail.com',
@@ -12,4 +13,4 @@ setup(name='nova-playlist',
                            open("requirements.txt", "r").readlines()),
       include_package_data=True,
       packages=find_packages(),
-      )
+)

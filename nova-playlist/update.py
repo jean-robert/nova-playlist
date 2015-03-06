@@ -26,7 +26,7 @@ parser = OptionParser()
 parser.add_option("", "--log-level", dest="log_level", default="info", help="verbosity : debug, info, warning, error, critical")
 parser.add_option("", "--log-filter", dest="log_filter", default="", help="")
 parser.add_option("", "--lookback", dest="lookback", default="7d", help=u"Période en secondes")
-parser.add_option("", "--strategy", dest="strategy", default="mostcommon", help=u"Stratégie parmi (mostcommon, random)")
+parser.add_option("", "--strategy", dest="strategy", default="mostcommon", help=u"Stratégie parmi (mostcommon, random, mixed)")
 parser.add_option("", "--titles", dest="titles", default=20, type="int", help=u"nombre de titres à sélectionner pour la playslist")
 parser.add_option("", "--workspace", dest="workspace", default="")
 parser.add_option("", "--youtube-dl-bin", dest="youtube_dl_bin", default="youtube-dl")
@@ -110,8 +110,10 @@ def scrapNova(ts):
         parsed_content = BeautifulSoup(page.content)
         for t in parsed_content.select('div.resultat'):
             try:
-                fullPlaylist[(t['class'][0]).split('_')[1]] = Song(artist=(t.h2.string if t.h2.string else t.h2.a.string).strip(),
-                                                                   title=(t.h3.string if t.h3.string else t.h3.a.string).strip())
+                fullPlaylist[(t['class'][0]).split('_')[1]] = Song(
+                    artist=(t.h2.string if t.h2.string else t.h2.a.string).strip(),
+                    title=(t.h3.string if t.h3.string else t.h3.a.string).strip()
+                )
             except:
                 logger.error("Cannot parse %(t)s, %(e)s" % locals())
 
@@ -123,6 +125,11 @@ def buildPlaylist(songs, title_nb, strategy):
     playlist = Counter(songs).most_common()
     if strategy == "random":
         random.shuffle(playlist)
+    elif strategy == "mixed":
+        playlist2 = playlist[:(title_nb / 2)]
+        playlist3 = filter(lambda title: title not in playlist2, playlist)
+        random.shuffle(playlist3)
+        playlist = playlist2 + playlist3[:(title_nb / 2)]
     playlist = playlist[:title_nb]
     for i, (song, broadcast_nb) in enumerate(playlist):
         logger.info("#%(i).3d %(song)s %(broadcast_nb)s broadcasts" % locals())
@@ -188,8 +195,14 @@ def create_directory(directory):
     os_query("mkdir -p %(directory)s" % locals())
 
 
-duration_suffixes = dict((("s", 1), ("m", 60), ("h", 60 * 60), ("d", 24 * 60 * 60),
-                         ("w", 7 * 24 * 60 * 60), ("y", 365 * 7 * 24 * 60 * 60)))
+duration_suffixes = dict((
+    ("s", 1),
+    ("m", 60),
+    ("h", 60 * 60),
+    ("d", 24 * 60 * 60),
+    ("w", 7 * 24 * 60 * 60),
+    ("y", 365 * 7 * 24 * 60 * 60)
+))
 
 
 def parse_duration(duration):
@@ -203,6 +216,7 @@ def parse_duration(duration):
     suffix = duration[-1]
     prefix = duration[:-1]
     return int(prefix) * duration_suffixes[suffix]
+
 
 if __name__ == "__main__":
     lookback = parse_duration(options.lookback)
