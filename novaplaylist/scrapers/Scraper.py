@@ -15,3 +15,12 @@ class Scraper(object):
             return soup
         except Exception as e:
             logger.error("Cannot scrap %(url)s, %(e)s" % locals())
+
+    def post(self, url, data):
+        try:
+            logger.info("Scraping %(url)s" % locals())
+            ret = requests.post(url, data)
+            soup = BeautifulSoup(ret.content)
+            return soup
+        except Exception as e:
+            logger.error("Cannot scrap %(url)s, %(e)s" % locals())

@@ -6,7 +6,7 @@ import requests_cache
 import unittest
 from novaplaylist.core.tools import parse_duration, os_query
 from novaplaylist.core.Song import Song
-from novaplaylist.scrapers import Scraper, FipScraper, NovaScraper, OuiScraper
+from novaplaylist.scrapers import Scraper, FipScraper, NovaScraper, OuiScraper, NostalgieScraper
 
 
 class ToolsTest(unittest.TestCase):
@@ -35,7 +35,10 @@ class SongTest(unittest.TestCase):
 
 class ScraperTest(unittest.TestCase):
     def setUp(self):
-        requests_cache.install_cache(os.path.join(os.path.dirname(__file__), "test"))
+        requests_cache.install_cache(
+            cache_name=os.path.join(os.path.dirname(__file__), "test"),
+            allowable_methods=('GET', 'POST')
+        )
         self.ts_beg = datetime.datetime(2015, 3, 5, 0)
         self.ts_end = datetime.datetime(2015, 3, 5, 3)
 
@@ -62,3 +65,9 @@ class ScraperTest(unittest.TestCase):
         songs = scraper.scrap(self.ts_beg, self.ts_end)
         self.assertEqual(len(songs), 44)
         self.assertEqual(songs[0], Song("Memphis May Fire", "The Rose"))
+
+    def test_nostalgie(self):
+        scraper = NostalgieScraper()
+        songs = scraper.scrap(self.ts_beg, self.ts_end)
+        self.assertEqual(len(songs), 56)
+        # self.assertEqual(songs[0], Song("Memphis May Fire", "The Rose"))        
