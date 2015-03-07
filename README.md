@@ -15,9 +15,34 @@ Avoir une playlist à jour dans un dossier DropBox avec les titres les plus jou�
 
 ### Exemples d'utilisation
 Sans caching en regardant les 3 dernières heures:
-    `python update.py --lookback 3h --titles 5`
+
+    python update.py --lookback 3h --titles 5
+
 Avec caching en regardant les 7 derniers jours:
-    `python update.py --lookback 7d --titles 20 --workspace /tmp/toto`
+
+    python update.py --lookback 7d --titles 20 --workspace /tmp/toto
+
+Strategy mostcommon: sont sélectionnés les morceaux les plus joués
+
+    python update.py --lookback 7d --titles 20 --strategy mostcommon
+
+Strategy random: sont sélectionnés des morceaux au hasard
+
+    python update.py --lookback 7d --titles 20 --strategy random
+
+Strategy mixed: 50% des morceaux sont choisis en mostcommon, 50% en random
+
+    python update.py --lookback 7d --titles 20 --strategy mixed
+
+Utilisation de la radio Fip:
+
+    python update.py --lookback 7d --titles 20 --radio fip
+
+Utilisation de la radio OuiFm:
+
+    python update.py --lookback 7d --titles 20 --radio oui
+
+
 
 ### `update.py`
 - récupère la playlist de diffusion (scrap de Nova depuis un timestamp donné)
