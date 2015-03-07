@@ -6,9 +6,7 @@ import requests_cache
 import unittest
 from novaplaylist.core.tools import parse_duration, os_query
 from novaplaylist.core.Song import Song
-from novaplaylist.scrapers.Scraper import Scraper
-from novaplaylist.scrapers.FipScraper import FipScraper
-from novaplaylist.scrapers.NovaScraper import NovaScraper
+from novaplaylist.scrapers import Scraper, FipScraper, NovaScraper, OuiScraper
 
 
 class ToolsTest(unittest.TestCase):
@@ -58,3 +56,9 @@ class ScraperTest(unittest.TestCase):
         songs = scraper.scrap(self.ts_beg, self.ts_end)
         self.assertEqual(len(songs), 45)
         self.assertEqual(songs[0], Song("Sporto Kantes", "Holiday"))
+
+    def test_oui(self):
+        scraper = OuiScraper()
+        songs = scraper.scrap(self.ts_beg, self.ts_end)
+        self.assertEqual(len(songs), 44)
+        self.assertEqual(songs[0], Song("Memphis May Fire", "The Rose"))

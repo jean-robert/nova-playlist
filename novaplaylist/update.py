@@ -14,8 +14,7 @@ import urllib
 from optparse import OptionParser
 from collections import Counter
 
-from scrapers.NovaScraper import NovaScraper
-from scrapers.FipScraper import FipScraper
+from scrapers import NovaScraper, FipScraper, OuiScraper
 from core.tools import os_query, parse_duration, create_directory
 
 
@@ -109,6 +108,8 @@ if __name__ == "__main__":
 
     if options.radio == "fip":
         songs = FipScraper().scrap(ts_beg, ts_end)
+    elif options.radio == "oui":
+        songs = OuiScraper().scrap(ts_beg, ts_end)
     else:
         songs = NovaScraper().scrap(ts_beg, ts_end)
 
