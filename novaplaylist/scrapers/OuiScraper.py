@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import time
 import datetime
 
 from Scraper import Scraper

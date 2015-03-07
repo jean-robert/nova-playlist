@@ -4,7 +4,7 @@ import os
 import datetime
 import requests_cache
 import unittest
-from novaplaylist.core.tools import parse_duration, os_query
+from novaplaylist.core.tools import parse_duration, os_query, remove_and_create_directory, create_directory
 from novaplaylist.core.Song import Song
 from novaplaylist.scrapers import Scraper, FipScraper, NovaScraper, OuiScraper, NostalgieScraper
 
@@ -31,6 +31,10 @@ class SongTest(unittest.TestCase):
         self.assertEqual(song.filename(""), "Artist - Title.mp3")
         self.assertEqual(song.filename("/tmp"), "/tmp/Artist - Title.mp3")
         self.assertEqual(song.filename("/tmp/"), "/tmp/Artist - Title.mp3")
+        directory = os.path.join(os.path.dirname(__file__), "tmp")
+        self.assertEqual(create_directory(directory), None)
+        self.assertEqual(remove_and_create_directory(directory), None)
+        os_query("rm -rf %(directory)s" % locals())
 
 
 class ScraperTest(unittest.TestCase):
@@ -45,6 +49,7 @@ class ScraperTest(unittest.TestCase):
     def test_base(self):
         scraper = Scraper()
         self.assertEqual(scraper.get(""), None)
+        self.assertEqual(scraper.post("", {}), None)
 
     def test_fip(self):
         scraper = FipScraper()
@@ -69,5 +74,5 @@ class ScraperTest(unittest.TestCase):
     def test_nostalgie(self):
         scraper = NostalgieScraper()
         songs = scraper.scrap(self.ts_beg, self.ts_end)
-        self.assertEqual(len(songs), 56)
-        # self.assertEqual(songs[0], Song("Memphis May Fire", "The Rose"))        
+        self.assertEqual(len(songs), 47)
+        self.assertEqual(songs[0], Song("Roger Glover", "Love Is All"))

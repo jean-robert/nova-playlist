@@ -85,6 +85,7 @@ def downloadMP3(youtube_dl_bin, working_directory, songs):
             logger.warning("Cannot download %(song)s, %(e)s" % locals())
     return ok_songs
 
+
 def makePlaylistFile(songs, working_directory):
     with open("%(working_directory)s/nova-playlist.m3u" % locals(), 'w+') as f:
         f.write("\n".join([song.filename(".").encode("utf8") for song in songs]))

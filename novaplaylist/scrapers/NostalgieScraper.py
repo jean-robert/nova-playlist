@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import time
 import datetime
 
 from Scraper import Scraper
 from novaplaylist.core.Song import Song
-from novaplaylist.core.logorigins import logger
 
 
 class NostalgieScraper(Scraper):
