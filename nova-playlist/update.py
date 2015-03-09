@@ -139,13 +139,14 @@ def scrapYouTube(songs):
         url = "http://www.youtube.com/results?search_query=%s" % urllib.quote_plus(str(song))
         page = requests.get(url, timeout=15)
 
-        if 'Aucune vid' in page.content or len(re.findall('href="\/watch\?v=(.*?)[&;"]', page.content)) == 0:
-            logger.warning("No video found for %(song)s" % locals())
-            song.youtube_id = None
-        else:
+        try:
             youtube_id = re.findall('href="\/watch\?v=(.*?)[&;"]', page.content)[0]
             logger.info("Found %(youtube_id)s for song %(song)s" % locals())
             song.youtube_id = youtube_id
+        except:
+            logger.warning("No video found for %(song)s" % locals())
+            song.youtube_id = None
+
     return songs
 
 
