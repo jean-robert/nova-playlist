@@ -4,13 +4,16 @@ import os
 import datetime
 import requests_cache
 import unittest
-from novaplaylist.core.tools import parse_duration, os_query, remove_and_create_directory, create_directory
+from novaplaylist.core.tools import parse_duration, os_query, remove_and_create_directory, create_directory, clean_filename
 from novaplaylist.core.Song import Song
 from novaplaylist.scrapers import Scraper, FipScraper, NovaScraper, OuiScraper, NostalgieScraper
 
 
 class ToolsTest(unittest.TestCase):
     def test_all(self):
+        self.assertEqual(clean_filename("ta"), "ta")
+        self.assertEqual(clean_filename("t/a"), "t a")
+        self.assertEqual(clean_filename("t$a"), "t a")
         self.assertEqual(parse_duration("1d"), 86400)
         self.assertEqual(parse_duration("100"), 100)
         self.assertRaises(TypeError, parse_duration, 1)

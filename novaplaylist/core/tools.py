@@ -5,6 +5,10 @@ import os
 from logorigins import logger
 
 
+def clean_filename(fn):
+    return fn.replace("/", " ").replace("$", " ")
+
+
 def os_query(qry):
     start = time.time()
     retval = os.system(qry)

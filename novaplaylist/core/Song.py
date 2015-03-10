@@ -4,7 +4,7 @@ from mutagen.id3 import ID3, TIT2, TPE1, TALB
 import os
 
 from logorigins import logger
-from tools import os_query
+from tools import os_query, clean_filename
 
 
 class Song(object):
@@ -25,11 +25,11 @@ class Song(object):
         return hash((self.artist, self.title))
 
     def tmp_filename(self, working_directory):
-        ret = u"%s - %s.avi" % (self.artist.replace("/", " "), self.title.replace("/", " "))
+        ret = u"%s - %s.avi" % (clean_filename(self.artist), clean_filename(self.title))
         return os.path.join(working_directory, ret)
 
     def filename(self, working_directory):
-        ret = u"%s - %s.mp3" % (self.artist.replace("/", " "), self.title.replace("/", " "))
+        ret = u"%s - %s.mp3" % (clean_filename(self.artist), clean_filename(self.title))
         return os.path.join(working_directory, ret)
 
     def tag(self, working_directory, track_num, source):
