@@ -9,6 +9,8 @@ from novaplaylist.core.Song import Song
 class NostalgieScraper(Scraper):
     def parse(self, url, data, songs):
         soup = self.post(url, data)
+        if not soup:
+            return
         for t in soup.select('div.item')[1:]:
             hour = t.select(".hour")
             if not hour:

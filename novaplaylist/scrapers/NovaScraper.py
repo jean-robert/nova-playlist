@@ -11,6 +11,8 @@ from novaplaylist.core.logorigins import logger
 class NovaScraper(Scraper):
     def parse(self, url, songs):
         soup = self.get(url)
+        if not soup:
+            return
         for t in soup.select('div.resultat'):
             try:
                 songs[(t['class'][0]).split('_')[1]] = Song(
