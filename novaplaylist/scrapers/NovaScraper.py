@@ -28,6 +28,7 @@ class NovaScraper(Scraper):
 
         songs = dict()
         while ts < ts_end:
-            self.parse(url % time.mktime(ts.timetuple()), songs)
+            timestamp = (ts - datetime.datetime(1970, 1, 1)).total_seconds() - 3600
+            self.parse(url % timestamp, songs)
             ts += datetime.timedelta(hours=1)
         return songs.values()

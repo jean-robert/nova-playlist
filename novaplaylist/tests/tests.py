@@ -65,7 +65,7 @@ class ScraperTest(unittest.TestCase):
     def test_nova(self):
         scraper = NovaScraper()
         songs = scraper.scrap(self.ts_beg, self.ts_end)
-        self.assertTrue(len(songs) in (45, 46))
+        self.assertEqual(len(songs), 45)
         self.assertEqual(songs[0], Song("Sporto Kantes", "Holiday"))
 
     def test_oui(self):
