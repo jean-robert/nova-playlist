@@ -1,2 +1,2 @@
 include README.md LICENCE.txt requirements.txt
-recursive-include nova-playlist *.py *.sh
+recursive-include novaplaylist *.py *.sh

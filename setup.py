@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='nova-playlist',
-    version='0.5.3',
+    version='0.5.4',
     author='Guillaume Thomas',
     author_email='guillaume.thomas642@gmail.com',
     license='LICENCE.txt',
