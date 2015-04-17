@@ -28,6 +28,7 @@ parser.add_option("", "--workspace", dest="workspace", default="")
 parser.add_option("", "--radio", dest="radio", default="nova")
 parser.add_option("", "--youtube-dl-bin", dest="youtube_dl_bin", default="youtube-dl")
 parser.add_option("", "--no-upload", dest="no_upload", default=False, action="store_true")
+parser.add_option("", "--youtubeid-source", dest="youtubeId_source", default="scrap", help=u"Méthode de récupération des ids YouTube (scrap, search)")
 
 options, args = parser.parse_args()
 default_level = getattr(logging, options.log_level.upper())
@@ -55,22 +56,6 @@ def buildPlaylist(songs, title_nb, strategy):
     for i, (song, broadcast_nb) in enumerate(playlist):
         logger.info("#%(i).3d %(song)s %(broadcast_nb)s broadcasts" % locals())
     return [i[0] for i in playlist]
-
-
-def scrapYouTube(songs):
-    retval = []
-    for song in songs:
-        url = "http://www.youtube.com/results?search_query=%s" % urllib.quote_plus(str(song))
-        page = requests.get(url, timeout=15)
-
-        if 'Aucune vid' in page.content:
-            logger.warning("No video found for %(song)s" % locals())
-            song.youtube_id = None
-        else:
-            youtube_id = re.findall('href="\/watch\?v=(.*?)[&;"]', page.content)[0]
-            logger.info("Found %(youtube_id)s for song %(song)s" % locals())
-            song.youtube_id = youtube_id
-    return songs
 
 
 def downloadMP3(youtube_dl_bin, working_directory, songs):
@@ -128,7 +113,11 @@ if __name__ == "__main__":
     songs = buildPlaylist(songs, options.titles, options.strategy)
 
     logger.info("Récupère les liens YouTube")
-    songs = scrapYouTube(songs)
+    for song in songs:
+        if options.youtubeId_source == "scrap":
+            song.scrapYouTubeId()
+        if options.youtubeId_source == "search":
+            song.searchYouTubeId()
 
     logger.info("Clean les anciens et télécharge les nouveaux .mp3")
     songs = downloadMP3(options.youtube_dl_bin, working_directory, songs)
