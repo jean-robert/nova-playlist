@@ -14,7 +14,7 @@ import urllib
 from optparse import OptionParser
 from collections import Counter
 
-from scrapers import NovaScraper, FipScraper, OuiScraper
+from scrapers import NovaScraper, FipScraper, OuiScraper, NostalgieScraper
 from core.tools import os_query, parse_duration, create_directory
 
 
@@ -75,9 +75,15 @@ def scrapYouTube(songs):
 
 def downloadMP3(youtube_dl_bin, working_directory, songs):
     create_directory(working_directory)
+    ok_songs = []
     for s, song in enumerate(songs):
-        song.download(youtube_dl_bin, working_directory)
-        song.tag(working_directory, s + 1, source)
+        try:
+            song.download(youtube_dl_bin, working_directory)
+            song.tag(working_directory, s + 1, source)
+            ok_songs.append(song)
+        except OSError as e:
+            logger.warning("Cannot download %(song)s, %(e)s" % locals())
+    return ok_songs
 
 
 def makePlaylistFile(songs, working_directory):
@@ -104,12 +110,17 @@ if __name__ == "__main__":
 
     working_directory = os.path.join(os.getcwd(), "music")
     if options.workspace:
-        requests_cache.install_cache(options.workspace)
+        requests_cache.install_cache(
+            cache_name=options.workspace,
+            allowable_methods=('GET', 'POST')
+        )
 
     if options.radio == "fip":
         songs = FipScraper().scrap(ts_beg, ts_end)
     elif options.radio == "oui":
         songs = OuiScraper().scrap(ts_beg, ts_end)
+    elif options.radio == "nostalgie":
+        songs = NostalgieScraper().scrap(ts_beg, ts_end)
     else:
         songs = NovaScraper().scrap(ts_beg, ts_end)
 
@@ -120,7 +131,7 @@ if __name__ == "__main__":
     songs = scrapYouTube(songs)
 
     logger.info("Clean les anciens et télécharge les nouveaux .mp3")
-    downloadMP3(options.youtube_dl_bin, working_directory, songs)
+    songs = downloadMP3(options.youtube_dl_bin, working_directory, songs)
 
     logger.info("Construit le fichier de playlist")
     makePlaylistFile(songs, working_directory)

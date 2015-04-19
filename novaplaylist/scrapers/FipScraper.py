@@ -9,6 +9,8 @@ from novaplaylist.core.Song import Song
 class FipScraper(Scraper):
     def parse(self, url):
         soup = self.get(url)
+        if not soup:
+            return songs
         divs = soup.select("div.son")
         songs = []
         for div in divs:

@@ -11,6 +11,8 @@ from novaplaylist.core.logorigins import logger
 class NovaScraper(Scraper):
     def parse(self, url, songs):
         soup = self.get(url)
+        if not soup:
+            return
         for t in soup.select('div.resultat'):
             try:
                 songs[(t['class'][0]).split('_')[1]] = Song(
@@ -26,6 +28,7 @@ class NovaScraper(Scraper):
 
         songs = dict()
         while ts < ts_end:
-            self.parse(url % time.mktime(ts.timetuple()), songs)
+            timestamp = time.mktime(ts.timetuple()) - time.mktime(datetime.datetime(1970, 1, 1).timetuple()) - 3600
+            self.parse(url % timestamp, songs)
             ts += datetime.timedelta(hours=1)
         return songs.values()

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import time
 import datetime
 
 from Scraper import Scraper
@@ -11,6 +10,8 @@ from novaplaylist.core.logorigins import logger
 class OuiScraper(Scraper):
     def parse(self, url, songs):
         soup = self.get(url)
+        if not soup:
+            return
         for t in soup.select('div#cest-quoi-ce-titre-results li'):
             try:
                 key = t.select(".date")[0].string

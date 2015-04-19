@@ -1,5 +1,7 @@
 # Nova Playlist
 
+[![Build Status](https://travis-ci.org/gtnx/nova-playlist.svg?branch=master)](https://travis-ci.org/gtnx/nova-playlist)
+
 ### Objectif
 Avoir une playlist à jour dans un dossier DropBox avec les titres les plus joués sur Radio Nova sur une période donnée
 
