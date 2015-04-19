@@ -57,16 +57,13 @@ class Song(object):
 
     def searchYouTubeId(self):
         try:
-            url = "http://www.youtube.com/results?search_query=%s" % urllib.quote_plus(str(self))
-            page = requests.get(url, timeout=15)
-
-            if 'Aucune vid' in page.content:
-                logger.warning("No video found for %(song)s" % locals())
-                self.youtube_id = None
-            else:
-                youtube_id = re.findall('href="\/watch\?v=(.*?)[&;"]', page.content)[0]
+            yta = ytapi()
+            youtube_id = yta.searchVideoId(str(self))
+            if youtube_id:
                 logger.info("Found %(youtube_id)s for song %(song)s" % locals())
-                self.youtube_id = youtube_id
+            else:
+                logger.warning("No youtube id found for song %(song)s" % locals())
+            self.youtube_id = youtube_id
 
         except:
             logger.warning('YouTube API search error, fallback on scraper')
