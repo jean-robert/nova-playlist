@@ -21,8 +21,7 @@ class ytapi(object):
         url = 'https://www.googleapis.com/youtube/v3/search'
         r = requests.get(url, params={'part': 'snippet',
                                       'q': title,
-                                      'type': 'video',
-                                      'order': 'viewCount'}, headers=headers)
+                                      'type': 'video'}, headers=headers)
         items = r.json()['items']
         if len(items) == 0:
             return None

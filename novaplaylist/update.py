@@ -10,7 +10,6 @@ import random
 import re
 import requests
 import requests_cache
-import urllib
 from optparse import OptionParser
 from collections import Counter
 

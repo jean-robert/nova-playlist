@@ -1,6 +1,7 @@
 beautifulsoup4 == 4.3.2
 mutagen
 youtube-dl == 2014.12.16.2
+requests == 2.5.1
 requests_cache == 0.4.8
 mutagenerate >= 0.1.0
 lxml
