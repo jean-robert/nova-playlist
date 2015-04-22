@@ -29,6 +29,7 @@ parser.add_option("", "--radio", dest="radio", default="nova")
 parser.add_option("", "--youtube-dl-bin", dest="youtube_dl_bin", default="youtube-dl")
 parser.add_option("", "--no-upload", dest="no_upload", default=False, action="store_true")
 parser.add_option("", "--youtube-id-source", dest="youtube_id_source", default="scrap", help=u"Méthode de récupération des ids YouTube (scrap, search)")
+parser.add_option("", "--playlist-id", dest="playlist_id", default=None, help=u"Id de la playlist pour uploader sur un channel YouTube")
 
 options, args = parser.parse_args()
 default_level = getattr(logging, options.log_level.upper())
@@ -120,13 +121,21 @@ if __name__ == "__main__":
         if options.youtube_id_source == "search":
             song.youtube_id = yta.search_youtube_id(str(song))
 
-    logger.info("Clean les anciens et télécharge les nouveaux .mp3")
-    songs = downloadMP3(options.youtube_dl_bin, working_directory, songs)
+    if options.playlist_id:
+        logger.info("Clean la playlist actuelle")
+        yta.clean_channel_playlist(options.playlist_id)
 
-    logger.info("Construit le fichier de playlist")
-    makePlaylistFile(songs, working_directory)
+        logger.info("Construit la nouvelle playlist sur le channel")
+        yta.build_channel_playlist(options.playlist_id, songs)
 
-    if not options.no_upload:
-        syncDropBox(songs, working_directory)
+    else:
+        logger.info("Clean les anciens et télécharge les nouveaux .mp3")
+        songs = downloadMP3(options.youtube_dl_bin, working_directory, songs)
+
+        logger.info("Construit le fichier de playlist")
+        makePlaylistFile(songs, working_directory)
+
+        if not options.no_upload:
+            syncDropBox(songs, working_directory)
 
     logger.info("Update terminé !")
