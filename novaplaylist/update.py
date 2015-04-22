@@ -15,6 +15,7 @@ from collections import Counter
 
 from scrapers import NovaScraper, FipScraper, OuiScraper, NostalgieScraper
 from core.tools import os_query, parse_duration, create_directory
+from core.youtubeapi import YouTubeAPI
 
 
 parser = OptionParser()
@@ -27,7 +28,7 @@ parser.add_option("", "--workspace", dest="workspace", default="")
 parser.add_option("", "--radio", dest="radio", default="nova")
 parser.add_option("", "--youtube-dl-bin", dest="youtube_dl_bin", default="youtube-dl")
 parser.add_option("", "--no-upload", dest="no_upload", default=False, action="store_true")
-parser.add_option("", "--youtubeid-source", dest="youtubeId_source", default="scrap", help=u"Méthode de récupération des ids YouTube (scrap, search)")
+parser.add_option("", "--youtube-id-source", dest="youtube_id_source", default="scrap", help=u"Méthode de récupération des ids YouTube (scrap, search)")
 
 options, args = parser.parse_args()
 default_level = getattr(logging, options.log_level.upper())
@@ -112,11 +113,12 @@ if __name__ == "__main__":
     songs = buildPlaylist(songs, options.titles, options.strategy)
 
     logger.info("Récupère les liens YouTube")
+    yta = YouTubeAPI()
     for song in songs:
-        if options.youtubeId_source == "scrap":
-            song.scrapYouTubeId()
-        if options.youtubeId_source == "search":
-            song.searchYouTubeId()
+        if options.youtube_id_source == "scrap":
+            song.youtube_id = yta.scrap_youtube_id(str(song))
+        if options.youtube_id_source == "search":
+            song.youtube_id = yta.search_youtube_id(str(song))
 
     logger.info("Clean les anciens et télécharge les nouveaux .mp3")
     songs = downloadMP3(options.youtube_dl_bin, working_directory, songs)
