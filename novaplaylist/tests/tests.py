@@ -71,8 +71,8 @@ class ScraperTest(unittest.TestCase):
     def test_oui(self):
         scraper = OuiScraper()
         songs = scraper.scrap(self.ts_beg, self.ts_end)
-        self.assertEqual(len(songs), 44)
-        self.assertEqual(songs[0], Song("Memphis May Fire", "The Rose"))
+        self.assertEqual(len(songs), 32)
+        self.assertEqual(songs[0], Song("Every Time I Die", "The New Black"))
 
     def test_nostalgie(self):
         scraper = NostalgieScraper()
