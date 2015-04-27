@@ -10,3 +10,4 @@ dist/
 nova-playlist/music/
 .coverage
 music/
+env/
