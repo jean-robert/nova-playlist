@@ -14,10 +14,11 @@ class FipScraper(Scraper):
         divs = soup.select("div.son")
         songs = []
         for div in divs:
-            songs.append(Song(
-                title=div.select("p.titre_title")[0].string.title(),
-                artist=div.select("p.titre_artiste")[0].string.title()
-            ))
+            if div.select("p.titre_title")[0].string != 'FIP ACTUALITE':
+                songs.append(Song(
+                    title=div.select("p.titre_title")[0].string.title(),
+                    artist=div.select("p.titre_artiste")[0].string.title()
+                ))
         return songs
 
     def scrap(self, ts_beg, ts_end):
