@@ -2,12 +2,10 @@
 
 from mutagen.id3 import ID3, TIT2, TPE1, TALB
 import os
-import re
-import requests
-import urllib
 
 from logorigins import logger
 from tools import os_query, clean_filename
+
 
 class Song(object):
     def __init__(self, artist, title):

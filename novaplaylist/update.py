@@ -7,8 +7,6 @@ import datetime
 from mutagenerate.core import AmazonSource
 import os
 import random
-import re
-import requests
 import requests_cache
 from optparse import OptionParser
 from collections import Counter

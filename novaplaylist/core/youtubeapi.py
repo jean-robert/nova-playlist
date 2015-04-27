@@ -1,9 +1,12 @@
+# -*- coding: utf-8 -*-
+
 import json
 import re
 import requests
 import urllib
 
 from logorigins import logger
+
 
 class YouTubeAPI(object):
     clientID = 'CLIENTID'
@@ -19,12 +22,11 @@ class YouTubeAPI(object):
         r = requests.post('https://accounts.google.com/o/oauth2/token', data=payload)
         self.accessToken = r.json()['access_token']
 
-
     def search_youtube_id(self, title):
         try:
             if not self.accessToken:
                 self.get_access_token()
-            headers = {'Authorization':  'Bearer ' + self.accessToken}
+            headers = {'Authorization': 'Bearer ' + self.accessToken}
             url = 'https://www.googleapis.com/youtube/v3/search'
             r = requests.get(url, params={'part': 'snippet',
                                           'q': title,
@@ -41,7 +43,6 @@ class YouTubeAPI(object):
             logger.warning('YouTube API search error, fallback on scraper')
             return self.scrap_youtube_id(title)
 
-
     def scrap_youtube_id(self, title):
         url = "http://www.youtube.com/results?search_query=%s" % urllib.quote_plus(title)
         page = requests.get(url, timeout=15)
@@ -54,11 +55,10 @@ class YouTubeAPI(object):
             logger.info("Found %s for song %s" % (youtube_id, str(self)))
             return youtube_id
 
-
     def clean_channel_playlist(self, playlist_id):
         if not self.accessToken:
             self.get_access_token()
-        headers = {'Authorization':  'Bearer ' + self.accessToken}
+        headers = {'Authorization': 'Bearer ' + self.accessToken}
         url = 'https://www.googleapis.com/youtube/v3/playlistItems'
         r = requests.get(url, params={'part': 'snippet',
                                       'playlistId': playlist_id,
@@ -68,12 +68,11 @@ class YouTubeAPI(object):
             if vd.status_code != 204:
                 logger.error("Error removing song from playlist %s" % (vd.text))
 
-
     def build_channel_playlist(self, playlist_id, songs):
         if not self.accessToken:
             self.get_access_token()
         url = 'https://www.googleapis.com/youtube/v3/playlistItems?part=snippet'
-        headers = {'Authorization':  'Bearer ' + self.accessToken,
+        headers = {'Authorization': 'Bearer ' + self.accessToken,
                    'Content-Type': 'application/json'}
         songPosition = -1
         for song in songs:
@@ -88,7 +87,7 @@ class YouTubeAPI(object):
                                           },
                                           'position': songPosition
                                       }
-                                  })
+                                      })
                 logger.debug('Sending payload %s' % (payload))
                 r = requests.post(url, data=payload, headers=headers)
                 if r.status_code != 200:
