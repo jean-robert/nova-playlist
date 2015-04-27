@@ -9,10 +9,10 @@ from novaplaylist.core.Song import Song
 class FipScraper(Scraper):
     def parse(self, url):
         soup = self.get(url)
+        songs = []
         if not soup:
             return songs
         divs = soup.select("div.son")
-        songs = []
         for div in divs:
             if div.select("p.titre_title")[0].string != 'FIP ACTUALITE':
                 songs.append(Song(
