@@ -14,7 +14,7 @@ class FipScraper(Scraper):
             return songs
         divs = soup.select("div.son")
         for div in divs:
-            if div.select("p.titre_title")[0].string != 'FIP ACTUALITE':
+            if len(div.select("p.titre_title")) * len(div.select("p.titre_artiste")) > 0:
                 songs.append(Song(
                     title=div.select("p.titre_title")[0].string.title(),
                     artist=div.select("p.titre_artiste")[0].string.title()
