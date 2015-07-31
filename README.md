@@ -44,6 +44,10 @@ Utilisation de la radio OuiFm:
 
     python update.py --lookback 7d --titles 20 --radio oui
 
+Utilisation de la radio Radio Paradise:
+
+    python update.py --lookback 7d --titles 20 --radio radioparadise
+
 Utilisation de l'API YouTube pour chercher les ids des vidéos
 
     python update.py --lookback 7d --titles 20 --youtube-id-source search
