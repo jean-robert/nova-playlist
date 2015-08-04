@@ -5,7 +5,8 @@ import re
 import requests
 import urllib
 
-from logorigins import logger
+import logging
+logger = logging.getLogger('nova-playlist')
 
 
 class YouTubeAPI(object):

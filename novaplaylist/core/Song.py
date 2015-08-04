@@ -3,8 +3,10 @@
 from mutagen.id3 import ID3, TIT2, TPE1, TALB
 import os
 
-from logorigins import logger
+import logging
 from tools import os_query, clean_filename
+
+logger = logging.getLogger('nova-playlist')
 
 
 class Song(object):

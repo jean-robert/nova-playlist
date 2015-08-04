@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from core.logorigins import logger
 
 import datetime
 from mutagenerate.core import AmazonSource
@@ -17,8 +16,6 @@ from core.youtubeapi import YouTubeAPI
 
 
 parser = OptionParser()
-parser.add_option("", "--log-level", dest="log_level", default="info", help="verbosity : debug, info, warning, error, critical")
-parser.add_option("", "--log-filter", dest="log_filter", default="", help="")
 parser.add_option("", "--lookback", dest="lookback", default="7d", help=u"Période en secondes")
 parser.add_option("", "--strategy", dest="strategy", default="mostcommon", help=u"Stratégie parmi (mostcommon, random, mixed)")
 parser.add_option("", "--titles", dest="titles", default=20, type="int", help=u"nombre de titres à sélectionner pour la playslist")
@@ -30,16 +27,9 @@ parser.add_option("", "--youtube-id-source", dest="youtube_id_source", default="
 parser.add_option("", "--playlist-id", dest="playlist_id", default=None, help=u"Id de la playlist pour uploader sur un channel YouTube")
 
 options, args = parser.parse_args()
-default_level = getattr(logging, options.log_level.upper())
-for l in logging.Logger.manager.loggerDict.values():
-    if isinstance(l, logging.Logger):
-        l.setLevel(default_level)
-if options.log_filter:
-    for logger_name, level in [token.split(":") for token in options.log_filter.split(",")]:
-        logging.getLogger(logger_name).setLevel(getattr(logging, level.upper()))
-
 
 source = AmazonSource()
+logger = logging.getLogger('nova-playlist')
 
 
 def buildPlaylist(songs, title_nb, strategy):

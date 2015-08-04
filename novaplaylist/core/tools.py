@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import logging
 import time
 import os
-from logorigins import logger
+logger = logging.getLogger('nova-playlist')
 
 
 def clean_filename(fn):
