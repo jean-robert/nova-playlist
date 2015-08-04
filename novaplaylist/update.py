@@ -96,7 +96,7 @@ if __name__ == "__main__":
     elif options.radio == "nostalgie":
         songs = NostalgieScraper().scrap(ts_beg, ts_end)
     elif options.radio == "radioparadise":
-        songs = RadioParadiseScraper().scrap(ts_beg, ts_end)
+        songs = RadioparadiseScraper().scrap(ts_beg, ts_end)
     else:
         songs = NovaScraper().scrap(ts_beg, ts_end)
 
