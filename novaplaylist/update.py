@@ -10,7 +10,7 @@ import requests_cache
 from optparse import OptionParser
 from collections import Counter
 
-from scrapers import NovaScraper, FipScraper, OuiScraper, NostalgieScraper
+from scrapers import NovaScraper, FipScraper, OuiScraper, NostalgieScraper, RadioParadiseScraper
 from core.tools import os_query, parse_duration, create_directory
 from core.youtubeapi import YouTubeAPI
 
@@ -95,6 +95,8 @@ if __name__ == "__main__":
         songs = OuiScraper().scrap(ts_beg, ts_end)
     elif options.radio == "nostalgie":
         songs = NostalgieScraper().scrap(ts_beg, ts_end)
+    elif options.radio == "radioparadise":
+        songs = RadioParadiseScraper().scrap(ts_beg, ts_end)
     else:
         songs = NovaScraper().scrap(ts_beg, ts_end)
 
