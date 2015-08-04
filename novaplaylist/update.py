@@ -10,7 +10,7 @@ import requests_cache
 from optparse import OptionParser
 from collections import Counter
 
-from scrapers import NovaScraper, FipScraper, OuiScraper, NostalgieScraper, RadioParadiseScraper
+from scrapers import NovaScraper, FipScraper, OuiScraper, NostalgieScraper, RadioparadiseScraper
 from core.tools import os_query, parse_duration, create_directory
 from core.youtubeapi import YouTubeAPI
 
