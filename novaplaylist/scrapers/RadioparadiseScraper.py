@@ -18,6 +18,8 @@ class RadioparadiseScraper(Scraper):
                artist=t.text.split(' - ')[1],
                title=t.text.split(' - ')[0]
             )
+            key = song.__hash__()
+            songs[key] = song
 
     def scrap(self, ts_beg, ts_end):
         songs = dict()
